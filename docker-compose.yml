@@ -1,0 +1,45 @@
+version: "2"
+services:
+  pubsub:
+    image: messagebird/gcloud-pubsub-emulator:latest
+    ports:
+      - "8681:8681"
+    environment:
+      PUBSUB_PROJECT1: local-project,cnc-topic:cnc-subscription,notify-topic:notify-subscription,dl-topic:dl-subscription
+  publisher:
+    build:
+      context: ./publisher-api
+    ports:
+      - "5000:5000"
+    environment:
+      PUBSUB_EMULATOR_HOST: pubsub:8681
+      PUBSUB_PROJECT_ID: local-project
+      PUBSUB_CNC_TOPIC_ID: cnc-topic
+      PUBSUB_CNC_SUBSCRIPTION_ID: cnc-subscription
+      PUBSUB_NOTIFY_TOPIC_ID: notify-topic
+      PUBSUB_NOTIFY_SUBSCRIPTION_ID: notify-subscription
+      PUBSUB_DL_TOPIC_ID: dl-topic
+      PUBSUB_DL_SUBSCRIPTION_ID: dl-subscription
+    depends_on:
+      - pubsub
+  listener:
+    build:
+      context: ./listener-api
+    ports:
+      - "4000:4000"
+    environment:
+      PUBSUB_EMULATOR_HOST: pubsub:8681
+      PUBSUB_PROJECT_ID: local-project
+      PUBSUB_CNC_TOPIC_ID: cnc-topic
+      PUBSUB_CNC_SUBSCRIPTION_ID: cnc-subscription
+      PUBSUB_NOTIFY_TOPIC_ID: notify-topic
+      PUBSUB_NOTIFY_SUBSCRIPTION_ID: notify-subscription
+      PUBSUB_DL_TOPIC_ID: dl-topic
+      PUBSUB_DL_SUBSCRIPTION_ID: dl-subscription
+    depends_on:
+      - pubsub
+
+
+
+
+
