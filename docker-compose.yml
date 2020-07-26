@@ -28,6 +28,7 @@ services:
     ports:
       - "4000:4000"
     environment:
+      SERVER_PORT: 4000
       PUBSUB_EMULATOR_HOST: pubsub:8681
       PUBSUB_PROJECT_ID: local-project
       PUBSUB_CNC_TOPIC_ID: cnc-topic
@@ -36,6 +37,45 @@ services:
       PUBSUB_NOTIFY_SUBSCRIPTION_ID: notify-subscription
       PUBSUB_DL_TOPIC_ID: dl-topic
       PUBSUB_DL_SUBSCRIPTION_ID: dl-subscription
+      LISTENER_INSTANCE: "1"
+    depends_on:
+      - pubsub
+  
+  listener2:
+    build:
+      context: ./listener-api
+    ports:
+      - "4002:4002"
+    environment:
+      SERVER_PORT: 4002
+      PUBSUB_EMULATOR_HOST: pubsub:8681
+      PUBSUB_PROJECT_ID: local-project
+      PUBSUB_CNC_TOPIC_ID: cnc-topic
+      PUBSUB_CNC_SUBSCRIPTION_ID: cnc-subscription
+      PUBSUB_NOTIFY_TOPIC_ID: notify-topic
+      PUBSUB_NOTIFY_SUBSCRIPTION_ID: notify-subscription
+      PUBSUB_DL_TOPIC_ID: dl-topic
+      PUBSUB_DL_SUBSCRIPTION_ID: dl-subscription
+      LISTENER_INSTANCE: "2"
+    depends_on:
+      - pubsub
+
+  listener3:
+    build:
+      context: ./listener-api
+    ports:
+      - "4003:4003"
+    environment:
+      SERVER_PORT: 4003
+      PUBSUB_EMULATOR_HOST: pubsub:8681
+      PUBSUB_PROJECT_ID: local-project
+      PUBSUB_CNC_TOPIC_ID: cnc-topic
+      PUBSUB_CNC_SUBSCRIPTION_ID: cnc-subscription
+      PUBSUB_NOTIFY_TOPIC_ID: notify-topic
+      PUBSUB_NOTIFY_SUBSCRIPTION_ID: notify-subscription
+      PUBSUB_DL_TOPIC_ID: dl-topic
+      PUBSUB_DL_SUBSCRIPTION_ID: dl-subscription
+      LISTENER_INSTANCE: "3"
     depends_on:
       - pubsub
 

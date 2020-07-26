@@ -1,4 +1,4 @@
-package infrapubsub
+package infra
 
 import (
 	"context"

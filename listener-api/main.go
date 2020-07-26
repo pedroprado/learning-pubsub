@@ -4,19 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
+	"test/push-api/infra"
+	"test/push-api/models"
 	"time"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
 var (
+	serverPort             = os.Getenv("SERVER_PORT")
 	projectID              = os.Getenv("PUBSUB_PROJECT_ID")
 	pullTopicID            = os.Getenv("PUBSUB_CNC_TOPIC_ID")
 	pullSubscriptionID     = os.Getenv("PUBSUB_CNC_SUBSCRIPTION_ID")
@@ -24,37 +25,20 @@ var (
 	pushSubscriptionID     = os.Getenv("PUBSUB_NOTIFY_SUBSCRIPTION_ID")
 	deadLetterTopicID      = os.Getenv("PUBSUB_DL_TOPIC_ID")
 	deadLetterSubscription = os.Getenv("PUBSUB_DL_SUBSCRIPTION_ID")
+	listenerInstance       = os.Getenv("LISTENER_INSTANCE")
 	ctx                    context.Context
 	client                 *pubsub.Client
 )
 
-type cncCommand struct {
-	EntityID   uuid.UUID `json:"entityId"`
-	EngineName string    `json:"engineName"`
-	Time       time.Time `json:"time"`
-	NoCache    bool      `json:"noCache"`
-}
-
-type message struct {
-	Data      []byte `json:"data,omitempty"`
-	MessageID string `json:"messageId"`
-	// Attributes struct{} `json:"attributes"`
-}
-
-type pubSubMessage struct {
-	Message      message `json:"message"`
-	Subscription string  `json:"subscription"`
-}
-
 func main() {
 	ctx = context.Background()
-	client = createClient()
+	client = infra.CreateClient(ctx, projectID)
 
 	go pullMessages()
 
 	router := gin.Default()
 	router.GET("/dead-letter/pull", deadLetterPull)
-	router.Run(":4000")
+	router.Run(":" + serverPort)
 
 }
 
@@ -103,7 +87,7 @@ func pullMessages() {
 
 	go func() {
 		for msg := range channel {
-			cnc := cncCommand{}
+			cnc := models.CncCommand{}
 			bs := msg.Data
 			err := json.Unmarshal(bs, &cnc)
 			if err != nil {
@@ -118,7 +102,10 @@ func pullMessages() {
 						Errorf("Error on processing message: %+v", errors.WithStack(err))
 				} else {
 					// msg.Ack()
-					fmt.Printf("Processed without ack\n")
+					fmt.Printf("Processed without sending ack\n")
+					fmt.Println("Listerner instance: ", listenerInstance)
+					fmt.Println("Listerner messageId: ", msg.ID)
+
 				}
 			}
 
@@ -146,33 +133,6 @@ func pulling(channel chan *pubsub.Message) {
 
 }
 
-func process(cnc *cncCommand) error {
+func process(cnc *models.CncCommand) error {
 	return nil
-}
-
-//-------------------------------------------------------
-func convertMsg(bs []byte) {
-	message := pubSubMessage{}
-
-	err := json.Unmarshal(bs, &message)
-	if err != nil {
-		fmt.Printf("%+v \n", err)
-	}
-
-	content := cncCommand{}
-	err2 := json.Unmarshal(message.Message.Data, &content)
-	if err2 != nil {
-		fmt.Printf("%+v \n", err2)
-	}
-}
-
-func createClient() *pubsub.Client {
-
-	client, err := pubsub.NewClient(ctx, projectID)
-	if err != nil {
-		log.Fatalf("Failed do connect client: %v", err)
-	}
-
-	fmt.Printf("Client connected without error!\n")
-	return client
 }

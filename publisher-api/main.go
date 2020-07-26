@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	infrapubsub "test/pubsub/infra/pubsub"
+	"test/pubsub/infra"
 	"test/pubsub/models"
 	"time"
 
@@ -30,7 +30,7 @@ func main() {
 
 	router := gin.Default()
 	ctx = context.Background()
-	client = infrapubsub.CreateClient(ctx, projectID)
+	client = infra.CreateClient(ctx, projectID)
 	fmt.Println()
 	router.GET("/message/publish", pushMessage)
 	router.GET("/dead-letter/create", createDeadLetterTopic)
